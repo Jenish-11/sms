@@ -12,27 +12,18 @@ console.log("dd")
 module.exports.add=async(req,res)=>{
     const student = req.body
     const dpt = req.body.dpt
-    console.log("dpt",dpt);
     try{
         const emailExists =await Students.findOne({email : student.email}).exec()
-        const stmd =await Students.find({department : new mongoose.Types.ObjectId(student.department)}).sort({timestamp:-1}).exec()
-        console.log(stmd)
-        let result
-        if(stmd){
-         result = stmd[0]?.roll_number.replace(/[^0-9]/g,"")
-         console.log(result)
-        }
-        else{
-            console.log("nothing")
-        }
+
+        const stmd =await Students.find({department : new mongoose.Types.ObjectId(student.department)}).sort({createdAt:-1}).exec()
+        let result = stmd[0]?.roll_number.replace(/[^0-9]/g,"")
         if(emailExists){
             res.json(Response.error("email already exist"))
         }
         else{
         console.log("2nd")
         var mrs =()=> student.gender=="M"?"MR ":'Ms '
-
-        await Students.create({...student,name:mrs()+student.name,photo:req.files[0].filename,roll_number:!stmd?dpt.dpt_code+0001:dpt.dpt_code+result+1})
+        await Students.create({...student,name:mrs()+student.name,photo:req.files[0].filename,roll_number:!result?dpt.dpt_code+(1).toString().padStart(4, '0'):dpt.dpt_code+(parseInt(result)+1).toString().padStart(4, '0')})
         .then((s)=>res.json(Response.success(s))).catch((e)=>res.status(400).json(Response.error(e.message)))
    } }
     catch(e){
@@ -41,11 +32,21 @@ module.exports.add=async(req,res)=>{
 }
 module.exports.get_students=async(req,res)=>{
     try{
-    const st =await Students.aggregate().addFields({
-        photo:{$concat:[process.env.SERVER,'/',process.env.FOLDER,'/','$photo']}
-    })
-    console.log(st)
-    res.json(Response.success(st))
+        const items=req.query.item
+        console.log("QUERY",req.query);
+            var stu;
+            var fl_st=await Students.aggregate().lookup({
+                from: 'departments',
+                localField: 'department',
+                foreignField: '_id',
+                as: 'department_details',
+            }).unwind("$department_details").addFields({
+                photo:{$concat:[process.env.SERVER,'/',process.env.FOLDER,'/','$photo']}
+            })
+            req.query.item?stu=await fl_st.match({$or:[{email:{$regex:items}},{_id:new mongoose.Types.ObjectId(req.query.id)},{roll_number:{$regex:items,$options: "si"}},{'department_details.name':{$regex:items}}]}).exec()
+            :stu = await fl_st.exec()
+                res.json(Response.success(stu))
+
 }catch(e){
     res.status(400).json(Response.error(e.message))
 }
@@ -80,12 +81,12 @@ module.exports.update_students=async(req,res)=>{
         }
         return result;
     }
-    if(req.files){
-        console.log(req.files);
+    if(req.files[0]){
+        console.log("FILES",req.files);
         update.photo=req.files[0].filename
     }
-    else if(update.name){
-        update.name=mrs(stu.gender)+update.name
+    if(update.name){
+        update.name=mrs(update.gender?update.gender:stu.gender)+update.name
     }
     else if(update.gender){
         update.name=mrs(update.gender)+stu.name.split(" ")[1]
@@ -173,6 +174,8 @@ module.exports.verify_otp =async (req,res)=>{
    St_login.updateOne({email:req.params.email,user_agent:req.headers['user-agent'],ip:req.socket.remoteAddress})
    console.log(req.headers['user-agent'])
    console.log(req.socket.remoteAddress)
+
+
 //    if(confirmationCode==req.params.code){
 //     const token = jwt.sign({student,}, process.env.JWT_SECRET);
 //     // res.cookie('sms',token, { maxAge: 900000, httpOnly: true }).json("success");

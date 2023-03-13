@@ -32,7 +32,6 @@ try {
         mother_name:joi.string().required(),
         gender:joi.string().required().valid('M', 'F'),
         department:joi.objectId(),
-        roll_number:joi.string(),
         semester:joi.string().required().length(1).pattern(/^[0-9]+$/),
         photo:joi.string().domain()
     })
@@ -60,8 +59,6 @@ else if(req.path=='/update-student'){
         father_name:joi.string(),
         mother_name:joi.string(),
         gender:joi.string().valid('M','F'),
-        department:joi.string(),
-        roll_number:joi.string(),
         semester:joi.string().length(1).pattern(/^[0-9]+$/),
         photo:joi.string().domain()
     })

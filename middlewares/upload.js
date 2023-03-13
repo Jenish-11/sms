@@ -20,7 +20,7 @@ const fileFilter = (req, file, cb) => {
       cb(null, false);
     }
   };
-module.exports.upload=multer({
+const upload=multer({
     storage,
     fileFilter,
     limits : {
@@ -28,19 +28,19 @@ module.exports.upload=multer({
   },
 }).any()
 
-// module.exports.file_upload=(req,res,next)=>{
-//   console.log("dcdcscdscscss")
-//   upload(req, res,(err)=> {
-//     if (err instanceof multer.MulterError) {
-//       console.log("ERROR")
-//       res.status(400).json(Response.error(err.message))
-//     } else{
-//       console.log("UPLOaded")
-//       console.log(req.files)
-//       next()
-//     }
-//   })
-// }
+module.exports.file_upload=(req,res,next)=>{
+  console.log("dcdcscdscscss")
+  upload(req, res,(err)=> {
+    if (err instanceof multer.MulterError) {
+      console.log("ERROR")
+      res.status(400).json(Response.error(err.message))
+    } else{
+      console.log("UPLOaded")
+      console.log(req.files)
+      next()
+    }
+  })
+}
 
 
 
