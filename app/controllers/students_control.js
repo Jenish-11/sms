@@ -14,28 +14,29 @@ module.exports.add=async(req,res)=>{
     const dpt = req.body.dpt
     try{
         const emailExists =await Students.findOne({email : student.email}).exec()
-
         const stmd =await Students.find({department : new mongoose.Types.ObjectId(student.department)}).sort({createdAt:-1}).exec()
         let result = stmd[0]?.roll_number.replace(/[^0-9]/g,"")
         if(emailExists){
-            res.json(Response.error("email already exist"))
+           return  res.json(Response.error("email already exist"))
         }
-        else{
         console.log("2nd")
         var mrs =()=> student.gender=="M"?"MR ":'Ms '
-        await Students.create({...student,name:mrs()+student.name,photo:req.files[0].filename,roll_number:!result?dpt.dpt_code+(1).toString().padStart(4, '0'):dpt.dpt_code+(parseInt(result)+1).toString().padStart(4, '0')})
-        .then((s)=>res.json(Response.success(s))).catch((e)=>res.status(400).json(Response.error(e.message)))
-   } }
+        const s = await Students.create({...student,name:mrs()+student.name,photo:req.files[0].filename,roll_number:!result?dpt.dpt_code+(1).toString().padStart(4, '0'):dpt.dpt_code+(parseInt(result)+1).toString().padStart(4, '0')})
+        return res.json(Response.success(s))
+        // .then((s)=>res.json(Response.success(s))).catch((e)=>res.status(400).json(Response.error(e.message)))
+    }
     catch(e){
         res.status(400).json(Response.error(e.message))
     }
 }
 module.exports.get_students=async(req,res)=>{
     try{
-        const items=req.query.item
+        const items=req.query.item?req.query.item:"!"
+        const id=req.query.id
+        
         console.log("QUERY",req.query);
             var stu;
-            var fl_st=await Students.aggregate().lookup({
+            var fl_st= Students.aggregate().lookup({
                 from: 'departments',
                 localField: 'department',
                 foreignField: '_id',
@@ -43,12 +44,12 @@ module.exports.get_students=async(req,res)=>{
             }).unwind("$department_details").addFields({
                 photo:{$concat:[process.env.SERVER,'/',process.env.FOLDER,'/','$photo']}
             })
-            req.query.item?stu=await fl_st.match({$or:[{email:{$regex:items}},{_id:new mongoose.Types.ObjectId(req.query.id)},{roll_number:{$regex:items,$options: "si"}},{'department_details.name':{$regex:items}}]}).exec()
+            req.query.item||id?stu=await fl_st.match({$or:[{email:{$regex:items}},{_id:new mongoose.Types.ObjectId(id)},{roll_number:{$regex:items,$options: "si"}},{'department_details.name':{$regex:items}}]}).exec()
             :stu = await fl_st.exec()
-                res.json(Response.success(stu))
+               return res.json(Response.success(stu))
 
 }catch(e){
-    res.status(400).json(Response.error(e.message))
+  return  res.status(400).json(Response.error(e.message))
 }
 }
 module.exports.get_student_by_id=async(req,res)=>{
@@ -99,7 +100,7 @@ module.exports.update_students=async(req,res)=>{
         .catch(err=>res.status(200).json(Response.error(err.message)))).catch((err)=>res.status(400).json(Response.error(err.message)))
     }
     catch(e){
-        res.status(400).json(Response.error(e.message))
+       return res.status(400).json(Response.error(e.message))
     }
 }
 module.exports.delete_students=async(req,res)=>{

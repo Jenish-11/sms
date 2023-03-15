@@ -16,6 +16,9 @@ require('./app/models/student_login')
 const cors = require('cors')
 const sr = require('./routes/student_routs')
 const dr = require('./routes/dept_route')
+const semr = require('./routes/semester_route')
+const subr = require('./routes/subject_route')
+const mr = require('./routes/marks_route')
 const server = http.createServer(app);
 const io = socket(server,{cors:{origin:'*'}})
 app.use(cors())
@@ -122,4 +125,7 @@ io.on('connect',socket=>{
 
 app.use(sr)
 app.use(dr)
+app.use(semr)
+app.use(subr)
+app.use(mr)
 server.listen(process.env.PORT,()=>console.log("server is connected"))

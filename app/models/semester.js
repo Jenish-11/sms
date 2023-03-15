@@ -3,20 +3,19 @@ const mongoose = require('mongoose')
 const {Schema}=require('mongoose')
 
 
-const dpt = new Schema({
+const semester = new Schema({
     sem:{
-        type:String,
+        type:Number,
         uniquie:true,
-        required:true
+        required:true,
+        enum:[1,2,3,4,5,6,7,8]
     },
     department:{
         type:Schema.Types.ObjectId,
         ref:"departments"
     },
-    Subjects:{
-        type:Array,
-        required:true,
-        unique:false
-    }
-})
-module.exports.Semester=mongoose.model("semester",dpt)
+    subjects:[{ 
+        type :Schema.Types.ObjectId, ref: 'subjects' 
+    }],
+},{timestamps:true})
+module.exports.Semester=mongoose.model("semester",semester)

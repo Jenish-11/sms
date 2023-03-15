@@ -8,11 +8,11 @@ module.exports.student_id_exist=async(req,res,next)=>{
     next()
     }
     else{
-        res.status(400).json(Response.error("student Id not Exist"))
+       return res.status(400).json(Response.error("student Id not Exist"))
     }
 }
 catch(e){
-    res.status(400).json(Response.error("student Id not Exist"))
+   return res.status(400).json(Response.error("student Id not Exist"))
 }
 }
 
