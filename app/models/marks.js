@@ -9,21 +9,20 @@ const mark = new Schema({
 
     student_id:{
         type:Schema.Types.ObjectId,
-        ref:"students"
+        ref:"student",
     },
     semester_id:{
         type:Schema.Types.ObjectId,
-        ref:"semesters"
+        ref:"semesters",
     },
-    marks:[{
+    result:[{
         subject_id:{
             type :Schema.Types.ObjectId,
-            unique:true,
             ref:"subjects"
         },
         grade:{
-            types:String,
-            enum:["A","B","C","D","E","O"]
+            type:Number,
+            default:0,
         }
     }],
     
@@ -34,22 +33,17 @@ mark.pre('save',async function(next){
         console.log("THIS",this.student_id);
         const st = await Students.findOne({_id:new mongoose.Types.ObjectId(this.student_id)}).exec()
         const sem = await Semester.findById(this.semester_id)
-        // .lookup({
-        //         from: 'subjects',
-        //         localField: 'subjects',
-        //         foreignField: '_id',
-        //         as: 'subject_details',
-        // }).exec()
         console.log("ST",st.department);
         console.log("SEM",sem.department);
-        if(st.department.toString()!=sem.department.toString()){
+        if(st?.department?.toString()!=sem?.department.toString()){
             const error = new Error('department id not matching');
             return next(error)
         }
-        if(this.marks.length==sem.subjects){
+        if(this.result.length==0){
             for (const sub of sem.subjects) {
-                this.marks.push({subject_id:sub})
+                this.result.push({subject_id:sub})
             }
+            return next();
         }
             console.log("NEXT");
             return next();

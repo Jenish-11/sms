@@ -38,7 +38,7 @@ try {
 }
 else if(req.path=='/update-student'){
     validation = joi.object({
-        id:joi.objectId().required(),
+        student_id:joi.objectId().required(),
         email:joi.string()
         .email()
         .case("lower")
@@ -66,7 +66,7 @@ else if(req.path=='/update-student'){
 }
 else if(req.path=='/delete-students'||req.path=='/get-student-by-id'){
     validation = joi.object({
-        id:joi.string().required()
+        student_id:joi.string().required()
     })
 }
 else if(req.path=='/add-dpt'){

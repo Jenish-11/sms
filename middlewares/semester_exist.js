@@ -3,10 +3,8 @@ const { Response } = require("../helpers/helper");
 
 
 
-
-
 module.exports.semester_exist = async (req,res,next)=>{
-    const id = req.query.id 
+    const id = req.query.id?req.query.id:req.body.semester_id
     let sem;
     try{
     if(id){
@@ -15,7 +13,7 @@ module.exports.semester_exist = async (req,res,next)=>{
             return next()
         } 
         else{
-          return  res.status(400).json(Response.error("id not exit"))
+          return  res.status(400).json(Response.error("semster id not exit"))
         }
     }
      next()
