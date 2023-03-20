@@ -55,6 +55,26 @@ const give_marks = async (req, res, next) => {
         { arrayFilters: [{ "elem.subject_id": m.subject_id }] }
       );
     });
+    const updatedResult = await Mark.findOne({ _id: body.mark_id });
+    if (updatedResult) {
+      let totalMarks = 0;
+      updatedResult.result.forEach((subject) => {
+        totalMarks += subject.grade;
+      });
+      await Mark.updateOne(
+        { _id: body.mark_id },
+        { $set: { totalMarks: totalMarks } }
+      ).exec();
+      await Mark.updateOne(
+        { _id: body.mark_id },
+        {
+          $set: {
+            percentage:
+              (totalMarks / (updatedResult.result.length * 100)) * 100,
+          },
+        }
+      ).exec();
+    }
     return res.json(Response.success("Update Success"));
   } catch (e) {
     return res
@@ -92,16 +112,25 @@ const get_marks = async (req, res) => {
 };
 
 const filter_marks = async (req, res) => {
-  const { department_id, semester_id } = req.body;
-  const fl_marks = await Mark.aggregate().lookup({
-    from: "students",
-    localField: "student_id",
-    foreignField: "_id",
-    as: "student_id",
-  });
-  // .match({
-  //   $and: [{ department: department_id }],
-  // });
+  const position = req.query.sort;
+  const { department_id, semester_id, batch_of_year } = req.body;
+  console.log(req.body);
+  const fl_marks = await Mark.aggregate()
+    .lookup({
+      from: "students",
+      localField: "student_id",
+      foreignField: "_id",
+      as: "student_id",
+    })
+    .unwind("$student_id")
+    .match({
+      $and: [
+        { "student_id.department": new mongoose.Types.ObjectId(department_id) },
+        { semester_id: new mongoose.Types.ObjectId(semester_id) },
+        { "student_id.batch_of_year": batch_of_year },
+      ],
+    })
+    .sort({ percentage: position });
   res.json(Response.success(fl_marks));
 };
 module.exports = {
