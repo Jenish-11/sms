@@ -38,7 +38,7 @@ const get_semester = async (req, res) => {
             { "department_details.name": { $regex: items, $options: "si" } },
           ],
         }))
-      : (stu = await fl_st.exec());
+      : (stu = await fl_st.sort({sem:'asc'}).exec());
     return res.json(Response.success(stu));
   } catch (e) {
     return res.status(400).json(Response.error(e.message));

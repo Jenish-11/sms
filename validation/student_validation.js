@@ -8,7 +8,7 @@ var error = [];
 module.exports.val_create_student = (req, res, next) => {
   var validation;
   try {
-    // console.log(req.body);
+    console.log("BODY",req.body);
     if (req.path == "/add-students") {
       validation = joi.object({
         email: joi.string().email().case("lower").required(),
@@ -34,13 +34,8 @@ module.exports.val_create_student = (req, res, next) => {
         mother_name: joi.string().required(),
         gender: joi.string().required().valid("M", "F"),
         department: joi.objectId(),
-        semester: joi
-          .string()
-          .required()
-          .length(1)
-          .pattern(/^[0-9]+$/),
-        photo: joi.string(),
-        batch_of_year: joi.number().required(),
+        // photo: joi.string(),
+        batch_of_year: joi.number(),
       });
     } else if (req.path == "/update-student") {
       validation = joi.object({
@@ -69,7 +64,7 @@ module.exports.val_create_student = (req, res, next) => {
           .string()
           .length(1)
           .pattern(/^[0-9]+$/),
-        photo: joi.string(),
+        // photo: joi.meta({swaggerType: 'file'}),
         batch_of_year: joi.number(),
       });
     } else if (
@@ -91,7 +86,7 @@ module.exports.val_create_student = (req, res, next) => {
     });
     if (error) {
       const e_msg = error.details.map((e) => e.message);
-      res.status(403).json(Response.error(e_msg));
+      return res.status(403).json(Response.error(e_msg));
     } else {
       req.body = value;
       next();

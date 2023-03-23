@@ -12,13 +12,25 @@ const create_marks = async (req, res, next) => {
     const student_id = new mongoose.Types.ObjectId(body.student_id);
     const semester_id = new mongoose.Types.ObjectId(body.semester_id);
     console.log("BODY", body);
-    const mark = await Mark.aggregate().match({
-      $and: [{ student_id }, { semester_id }],
+    const mark = await Mark.findOne({ student_id, semester_id }).populate({
+      path: "result",
+      populate: {
+        path: "subject_id",
+        model: "subjects",
+      },
     });
-    if (mark.length !== 0) {
+    if (mark) {
       return res.json(Response.success(mark));
     }
-    const s = await Mark.create({ student_id, semester_id });
+    const s = await (
+      await Mark.create({ student_id, semester_id })
+    ).populate({
+      path: "result",
+      populate: {
+        path: "subject_id",
+        model: "subjects",
+      },
+    });
     return res.json(Response.success(s));
   } catch (e) {
     return res.status(400).json(Response.error(e.message));

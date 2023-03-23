@@ -12,17 +12,19 @@ console.log("dd");
 module.exports.add = async (req, res) => {
   const student = req.body;
   const dpt = req.body.dpt;
+  console.log("FILES", req.files);
   try {
     const emailExists = await Students.findOne({ email: student.email }).exec();
+    if (emailExists) {
+      return res.status(400).json(Response.error("email already exist"));
+    }
     const stmd = await Students.find({
       department: new mongoose.Types.ObjectId(student.department),
     })
       .sort({ createdAt: -1 })
       .exec();
     let result = stmd[0]?.roll_number.replace(/[^0-9]/g, "");
-    if (emailExists) {
-      return res.json(Response.error("email already exist"));
-    }
+
     console.log("2nd");
     var mrs = () => (student.gender == "M" ? "MR " : "Ms ");
     const s = await Students.create({
@@ -43,6 +45,7 @@ module.exports.get_students = async (req, res) => {
   try {
     const items = req.query.item ? req.query.item : "!";
     const id = req.query.id;
+    const page = req.query.pg ? req.query.pg : 1;
 
     console.log("QUERY", req.query);
     var stu;
@@ -70,7 +73,10 @@ module.exports.get_students = async (req, res) => {
             ],
           })
           .exec())
-      : (stu = await fl_st.exec());
+      : (stu = await fl_st
+          // .skip(page * 8)
+          // .limit(8)
+          .exec());
     return res.json(Response.success(stu));
   } catch (e) {
     return res.status(400).json(Response.error(e.message));
@@ -129,7 +135,15 @@ module.exports.update_students = async (req, res) => {
           .then((doc) => res.json(Response.success(doc)))
           .catch((err) => res.status(200).json(Response.error(err.message)))
       )
-      .catch((err) => res.status(400).json(Response.error(err.message)));
+      .catch((err) =>
+        res
+          .status(400)
+          .json(
+            Response.error(
+              err.code == 11000 ? "Email already exits" : err.message
+            )
+          )
+      );
   } catch (e) {
     return res.status(400).json(Response.error(e.message));
   }
